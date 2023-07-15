@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Init default logger writing to stderr and filename if it's not empty
 func Init(filename string) io.Closer {
 	var w io.Writer
 	var closer io.Closer
@@ -26,11 +27,38 @@ func Init(filename string) io.Closer {
 	debug := strings.ToLower(os.Getenv("DEBUG"))
 	if debug == "1" || debug == "true" || debug == "enabled" {
 		l = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			AddSource: true,
+			Level:     slog.LevelDebug,
 		}))
 	} else {
-		l = slog.New(slog.NewJSONHandler(w, nil))
+		l = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{
+			AddSource: true,
+			Level:     slog.LevelInfo,
+		}))
 	}
 	slog.SetDefault(l)
 	return closer
+}
+
+// InitRotate init default logger writing to rotated file and stderr
+// If filename is empty, then a default filename is used
+func InitRotate(filename string, optFns ...func(options *RotateFileWriterOptions)) io.Closer {
+	f := NewRotateFileWriter(filename, optFns...)
+	w := io.MultiWriter(f, os.Stderr)
+
+	var l *slog.Logger
+	debug := strings.ToLower(os.Getenv("DEBUG"))
+	if debug == "1" || debug == "true" || debug == "enabled" {
+		l = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{
+			AddSource: true,
+			Level:     slog.LevelDebug,
+		}))
+	} else {
+		l = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{
+			AddSource: true,
+			Level:     slog.LevelInfo,
+		}))
+	}
+	slog.SetDefault(l)
+	return f
 }
