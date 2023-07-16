@@ -25,7 +25,7 @@ func Init(filename string) io.Closer {
 		return nil
 	}
 
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalln("cannot open file", filename, err)
 	}
