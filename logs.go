@@ -8,9 +8,13 @@ import (
 	"strings"
 )
 
+const (
+	EnvDebug = "OLA_LOG_DEBUG" // 1, true, or enabled
+)
+
 // Init default logger writing to stderr and filename if it's not empty
 func Init(filename string) io.Closer {
-	debug := strings.ToLower(os.Getenv("DEBUG"))
+	debug := strings.ToLower(os.Getenv(EnvDebug))
 	var options *slog.HandlerOptions
 	if debug == "1" || debug == "true" || debug == "enabled" {
 		options = &slog.HandlerOptions{
@@ -42,7 +46,7 @@ func InitRotate(filename string, optFns ...func(options *RotateFileWriterOptions
 		log.Fatalln("filename is empty")
 	}
 
-	debug := strings.ToLower(os.Getenv("DEBUG"))
+	debug := strings.ToLower(os.Getenv(EnvDebug))
 	var options *slog.HandlerOptions
 	if debug == "1" || debug == "true" || debug == "enabled" {
 		options = &slog.HandlerOptions{
