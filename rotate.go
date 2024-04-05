@@ -37,6 +37,16 @@ type RotateFileWriterOptions struct {
 	MaxSize int64
 }
 
+func defaultRotateFileWriterOptions() *RotateFileWriterOptions {
+	return &RotateFileWriterOptions{
+		MaxBackups: 32,
+		MaxAge:     30 * time.Hour * 24, // 28 days
+		LocalTime:  false,
+		Compress:   true,
+		MaxSize:    512 * 1024 * 1024,
+	}
+}
+
 type RotateFileWriter struct {
 	ll *lumberjack.Roller
 }
@@ -47,13 +57,7 @@ func NewRotateFileWriter(filename string, optFns ...func(options *RotateFileWrit
 		filename = filepath.Join(os.Args[0], "log")
 	}
 
-	opts := &RotateFileWriterOptions{
-		MaxBackups: 32,
-		MaxAge:     30 * time.Hour * 24, // 28 days
-		LocalTime:  false,
-		Compress:   true,
-		MaxSize:    512 * 1024 * 1024,
-	}
+	opts := defaultRotateFileWriterOptions()
 
 	for _, fn := range optFns {
 		fn(opts)

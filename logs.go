@@ -13,50 +13,66 @@ const (
 )
 
 // Init default logger writing to stderr and filename if it's not empty
-func Init(filename string) io.Closer {
-	debug := strings.ToLower(os.Getenv(EnvDebug))
-	var options *slog.HandlerOptions
-	if debug == "1" || debug == "true" || debug == "enabled" {
-		options = &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}
+func Init(filename string, opts ...func(options *slog.HandlerOptions)) io.Closer {
+	options := new(slog.HandlerOptions)
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	if isDebugging() {
+		options.Level = slog.LevelDebug
 	}
 
 	if filename == "" {
-		if options != nil {
-			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, options)))
-		}
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, options)))
 		return nil
 	}
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalln("cannot open file", filename, err)
+		log.Fatalf("open file %s: %v\n", filename, err)
 	}
+
 	h := MultiHandler(slog.NewJSONHandler(f, options),
 		slog.NewTextHandler(os.Stderr, options))
 	slog.SetDefault(slog.New(h))
 	return f
 }
 
+type RotationOptions struct {
+	HandlerOptions slog.HandlerOptions
+	RotateFileWriterOptions
+}
+
 // InitRotate init default logger writing to rotated file and stderr
 // If filename is empty, then a default filename is used
-func InitRotate(filename string, optFns ...func(options *RotateFileWriterOptions)) io.Closer {
+func InitRotate(filename string, opts ...func(options *RotationOptions)) io.Closer {
 	if filename == "" {
 		log.Fatalln("filename is empty")
 	}
 
-	debug := strings.ToLower(os.Getenv(EnvDebug))
-	var options *slog.HandlerOptions
-	if debug == "1" || debug == "true" || debug == "enabled" {
-		options = &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}
+	options := &RotationOptions{
+		RotateFileWriterOptions: *defaultRotateFileWriterOptions(),
 	}
 
-	f := NewRotateFileWriter(filename, optFns...)
-	h := MultiHandler(slog.NewJSONHandler(f, options),
-		slog.NewTextHandler(os.Stderr, options))
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	if isDebugging() {
+		options.HandlerOptions.Level = slog.LevelDebug
+	}
+
+	f := NewRotateFileWriter(filename, func(o *RotateFileWriterOptions) {
+		*o = options.RotateFileWriterOptions
+	})
+	h := MultiHandler(slog.NewJSONHandler(f, &options.HandlerOptions),
+		slog.NewTextHandler(os.Stderr, &options.HandlerOptions))
 	slog.SetDefault(slog.New(h))
 	return f
+}
+
+func isDebugging() bool {
+	debug := strings.ToLower(os.Getenv(EnvDebug))
+	return debug == "1" || debug == "true" || debug == "enabled"
 }
