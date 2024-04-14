@@ -1,4 +1,4 @@
-module go.olapie.com/logs/rotation
+module go.olapie.com/logs/logrotation
 
 go 1.22.0
 
