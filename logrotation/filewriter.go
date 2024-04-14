@@ -1,4 +1,4 @@
-package logs
+package logrotation
 
 import (
 	"io"
@@ -11,9 +11,9 @@ import (
 	"github.com/natefinch/lumberjack/v3"
 )
 
-var _ io.WriteCloser = (*RotateFileWriter)(nil)
+var _ io.WriteCloser = (*FileWriter)(nil)
 
-type RotateFileWriterOptions struct {
+type FileWriterOptions struct {
 	// MaxAge is the maximum time to retain old log files based on the timestamp
 	// encoded in their filename. The default is not to remove old log files
 	// based on age.
@@ -29,16 +29,16 @@ type RotateFileWriterOptions struct {
 	// time.
 	LocalTime bool
 
-	// Compress determines if the rotated log files should be compressed
+	// Compress determines if the d log files should be compressed
 	// using gzip. The default is not to perform compression.
 	Compress bool
 
-	// MaxSize is the maximum bytes of a log file before being rotated. The default value is 512M
+	// MaxSize is the maximum bytes of a log file before being d. The default value is 512M
 	MaxSize int64
 }
 
-func defaultRotateFileWriterOptions() *RotateFileWriterOptions {
-	return &RotateFileWriterOptions{
+func defaultFileWriterOptions() *FileWriterOptions {
+	return &FileWriterOptions{
 		MaxBackups: 32,
 		MaxAge:     30 * time.Hour * 24, // 28 days
 		LocalTime:  false,
@@ -47,17 +47,17 @@ func defaultRotateFileWriterOptions() *RotateFileWriterOptions {
 	}
 }
 
-type RotateFileWriter struct {
+type FileWriter struct {
 	ll *lumberjack.Roller
 }
 
-func NewRotateFileWriter(filename string, optFns ...func(options *RotateFileWriterOptions)) *RotateFileWriter {
+func NewFileWriter(filename string, optFns ...func(options *FileWriterOptions)) *FileWriter {
 	filename = strings.TrimSpace(filename)
 	if filename == "" {
 		filename = filepath.Join(os.Args[0], "log")
 	}
 
-	opts := defaultRotateFileWriterOptions()
+	opts := defaultFileWriterOptions()
 
 	for _, fn := range optFns {
 		fn(opts)
@@ -74,15 +74,15 @@ func NewRotateFileWriter(filename string, optFns ...func(options *RotateFileWrit
 		log.Fatalln(err)
 	}
 
-	return &RotateFileWriter{
+	return &FileWriter{
 		ll: ll,
 	}
 }
 
-func (f *RotateFileWriter) Close() error {
+func (f *FileWriter) Close() error {
 	return f.ll.Close()
 }
 
-func (f *RotateFileWriter) Write(p []byte) (n int, err error) {
+func (f *FileWriter) Write(p []byte) (n int, err error) {
 	return f.ll.Write(p)
 }

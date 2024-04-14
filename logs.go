@@ -39,39 +39,6 @@ func Init(filename string, opts ...func(options *slog.HandlerOptions)) io.Closer
 	return f
 }
 
-type RotationOptions struct {
-	HandlerOptions slog.HandlerOptions
-	RotateFileWriterOptions
-}
-
-// InitRotate init default logger writing to rotated file and stderr
-// If filename is empty, then a default filename is used
-func InitRotate(filename string, opts ...func(options *RotationOptions)) io.Closer {
-	if filename == "" {
-		log.Fatalln("filename is empty")
-	}
-
-	options := &RotationOptions{
-		RotateFileWriterOptions: *defaultRotateFileWriterOptions(),
-	}
-
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	if isDebugging() {
-		options.HandlerOptions.Level = slog.LevelDebug
-	}
-
-	f := NewRotateFileWriter(filename, func(o *RotateFileWriterOptions) {
-		*o = options.RotateFileWriterOptions
-	})
-	h := MultiHandler(slog.NewJSONHandler(f, &options.HandlerOptions),
-		slog.NewTextHandler(os.Stderr, &options.HandlerOptions))
-	slog.SetDefault(slog.New(h))
-	return f
-}
-
 func isDebugging() bool {
 	debug := strings.ToLower(os.Getenv(EnvDebug))
 	return debug == "1" || debug == "true" || debug == "enabled"

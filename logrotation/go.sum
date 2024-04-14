@@ -1,0 +1,4 @@
+github.com/natefinch/lumberjack/v3 v3.0.0-alpha h1:HZ2AJF20D1lo9S0F/rpgkFbPGam5dgR3X0KUtZA5mlY=
+github.com/natefinch/lumberjack/v3 v3.0.0-alpha/go.mod h1:rPTlHhMjhrvPAhqKh0FC57E0pXZoanrXgMDj4yv5wcM=
+go.olapie.com/logs v0.3.0 h1:MifAVE1LG8oRDFK+oJ5IEhBtwPRQenGPUxqyXk35oyU=
+go.olapie.com/logs v0.3.0/go.mod h1:gjT9mMN8H/1uVA6cuikjJ5V7xCodsYgciMl9F9Ldu54=
